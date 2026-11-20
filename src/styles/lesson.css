@@ -43,7 +43,7 @@ body.lesson {
 }
 .topbar-actions .btn {
   min-height: 34px;
-  padding: 0.45rem 0.7rem;
+  padding: 0 0.7rem;
 }
 
 .lesson-layout {
@@ -272,11 +272,6 @@ body.lesson {
 .btn-icon {
   width: 40px;
   padding: 0;
-  display: grid;
-  place-items: center;
-}
-.btn-icon svg {
-  display: block;
 }
 
 /* Readout */
@@ -494,7 +489,7 @@ input[type='range']::-moz-range-thumb {
   }
   .topbar-actions .btn {
     font-size: 0.78rem;
-    padding: 0.4rem 0.55rem;
+    padding: 0 0.55rem;
   }
   .lesson-layout {
     display: block;
