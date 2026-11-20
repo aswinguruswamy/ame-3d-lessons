@@ -1,0 +1,322 @@
+/* Lesson 2 extras: view switch, cockpit insets, stability label, damping graph. */
+
+.stage {
+  background: #dfe8f0;
+}
+
+.view-switch {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: rgba(255, 253, 248, 0.92);
+}
+@media (max-width: 899px) {
+  .split-only {
+    display: none;
+  }
+}
+
+/* ---------- Cockpit insets ---------- */
+.instruments {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  z-index: 2;
+  border-radius: 10px;
+  transition: box-shadow 0.25s;
+}
+.instruments.is-focus {
+  box-shadow: 0 0 0 3px rgba(217, 130, 43, 0.7);
+}
+
+.ovh {
+  background: #59666f;
+  border: 1px solid #3e4850;
+  border-radius: 8px;
+  padding: 6px 8px 7px;
+  color: #f2f4f5;
+  font: 600 9px/1 var(--sans);
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+}
+.ovh-title {
+  text-align: center;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  padding-bottom: 3px;
+}
+.ovh-row {
+  display: flex;
+  gap: 7px;
+}
+.pb {
+  position: relative;
+  width: 40px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  grid-template-rows: 20px 20px 12px;
+  justify-items: center;
+  font: inherit;
+  color: inherit;
+}
+.pb-fault,
+.pb-off {
+  width: 36px;
+  display: grid;
+  place-items: center;
+  font: 700 7.5px/1 var(--mono);
+  background: #1d2328;
+  border: 1px solid #0d1114;
+}
+.pb-fault {
+  color: #5a4520; /* unlit amber */
+  border-radius: 3px 3px 0 0;
+}
+.pb-off {
+  color: #4c5257; /* unlit white */
+  border-radius: 0 0 3px 3px;
+  border-top: 0;
+}
+.pb-name {
+  font-size: 8px;
+  align-self: end;
+}
+.pb-live {
+  cursor: pointer;
+}
+.pb-live .pb-fault,
+.pb-live .pb-off {
+  box-shadow: 0 2px 0 #0d1114;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+/* Released (OUT) = OFF: white OFF light on */
+.pb-live:not(.is-on) .pb-off {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+/* Pressed (IN) = ON: button sits deeper, no light */
+.pb-live.is-on .pb-fault,
+.pb-live.is-on .pb-off {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #0d1114;
+}
+.pb-live.is-pressing .pb-fault,
+.pb-live.is-pressing .pb-off {
+  animation: pb-press 0.32s ease;
+}
+@keyframes pb-press {
+  40% {
+    transform: translateY(3px) scale(0.95);
+  }
+}
+.pb-live:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.ovh-status {
+  margin-top: 5px;
+  text-align: center;
+  font: 500 9px/1 var(--sans);
+}
+.ovh-status b {
+  font-family: var(--mono);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #2b3238;
+  color: #e7eaec;
+}
+.ovh-status b[data-on='true'] {
+  color: #3ee07f;
+}
+
+.ecam {
+  background: #05080a;
+  border: 2px solid #2b3238;
+  border-radius: 8px;
+  width: 150px;
+  box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.5);
+}
+.ecam svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ecam-title {
+  fill: #e8eaec;
+  font: 600 9px var(--mono);
+}
+.ecam-arc {
+  fill: none;
+  stroke: #e8eaec;
+  stroke-width: 1.4;
+}
+.ecam-ticks line {
+  stroke: #e8eaec;
+  stroke-width: 1.4;
+}
+.ecam-limit path {
+  fill: #2fd06f;
+}
+.ecam-rudder path {
+  fill: #2fd06f;
+}
+.ecam-value {
+  fill: #2fd06f;
+  font: 600 10px var(--mono);
+}
+.ecam-side {
+  fill: #8d969e;
+  font: 600 9px var(--mono);
+}
+
+.stage-banner {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%);
+  max-width: min(90%, 420px);
+  background: #fff4e5;
+  border: 1px solid #e9b26a;
+  color: #6b3d06;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  z-index: 3;
+}
+
+/* ---------- Controls ---------- */
+.disturb-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+.disturb-row .btn {
+  flex: 1;
+}
+.stability {
+  margin: -0.2rem 0 0.9rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  display: grid;
+  gap: 0.15rem;
+  background: #eef5ef;
+  border: 1px solid #bcdcc5;
+  color: #1d5e33;
+}
+.stability span {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+.stability[data-likely='true'] {
+  background: #fff4e5;
+  border-color: #e9b26a;
+  color: #7a4308;
+}
+
+/* ---------- Graph ---------- */
+.graph-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.graph-head .card-title {
+  margin: 0;
+}
+.switch-row.compact {
+  border: 0;
+  padding: 0;
+  font-size: 0.78rem;
+}
+.graph {
+  display: block;
+  width: 100%;
+  height: 190px;
+  margin-top: 0.5rem;
+}
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  margin-top: 0.3rem;
+}
+.graph-legend[hidden] {
+  display: none;
+}
+.graph-legend i,
+.mode-table i.dot {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+}
+.graph-legend i.dash {
+  background: repeating-linear-gradient(90deg, #7b8490 0 4px, transparent 4px 7px);
+}
+.mode-table {
+  width: 100%;
+  margin-top: 0.6rem;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.mode-table th,
+.mode-table td {
+  text-align: right;
+  padding: 0.3rem 0.2rem;
+  border-top: 1px solid var(--paper-2);
+  font-weight: 500;
+}
+.mode-table thead th {
+  color: var(--ink-3);
+  font: 500 0.72rem var(--mono);
+  border-top: 0;
+}
+.mode-table th:first-child {
+  text-align: left;
+  white-space: nowrap;
+}
+.mode-table td {
+  font-family: var(--mono);
+}
+.mode-table .warn {
+  color: var(--high);
+}
+
+@media (max-width: 860px) {
+  .view-switch {
+    top: 8px;
+    right: 8px;
+  }
+  .view-switch button {
+    min-height: 30px;
+    padding: 0.35rem 0.5rem;
+  }
+  .instruments {
+    left: 6px;
+    bottom: 6px;
+    gap: 5px;
+    transform: scale(0.64);
+    transform-origin: left bottom;
+  }
+  .chip-hint {
+    display: inline-flex;
+  }
+  .stage-chips .chip:first-child {
+    display: none;
+  }
+}

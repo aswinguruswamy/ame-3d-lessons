@@ -14,6 +14,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         magnus: resolve(__dirname, 'lessons/magnus/index.html'),
+        dutchRoll: resolve(__dirname, 'lessons/dutch-roll/index.html'),
       },
     },
   },

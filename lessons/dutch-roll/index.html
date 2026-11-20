@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Dutch Roll · AME 3D Lessons</title>
+    <meta name="description" content="Interactive 3D lesson: Dutch roll in a swept-wing airliner and how the yaw damper stops it, with cockpit view and a live damping graph." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body class="lesson">
+    <header class="topbar">
+      <a class="back-link" href="../../">← All lessons</a>
+      <div class="lesson-name"><span class="eyebrow">Lesson 2</span><span>Dutch roll &amp; yaw damper</span></div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btn-labels" aria-pressed="true">Labels ON</button>
+        <button type="button" class="btn btn-ghost" id="btn-view">Reset view</button>
+      </div>
+    </header>
+
+    <main class="lesson-layout">
+      <section class="stage" id="stage" aria-label="3D scene. Drag to rotate, scroll or pinch to zoom, right-drag or two-finger drag to pan.">
+        <div class="stage-loading" id="loading"><span class="spinner"></span>Loading 3D scene…</div>
+        <div class="stage-chips">
+          <span class="chip">A320-class model · FL350</span>
+          <span class="chip chip-hint">Rudder drawn ×4</span>
+        </div>
+        <div class="segmented view-switch" role="radiogroup" aria-label="Camera view">
+          <button type="button" role="radio" data-view="outside" aria-checked="true">Outside</button>
+          <button type="button" role="radio" data-view="cockpit" aria-checked="false">Cockpit</button>
+          <button type="button" role="radio" data-view="split" aria-checked="false" class="split-only">Split</button>
+        </div>
+        <div class="instruments" id="instruments">
+          <div id="overhead"></div>
+          <div id="ecam"></div>
+        </div>
+        <div class="stage-banner" id="banner" hidden>
+          The motion is too large for this simple (linear) model. Press <b>Reset</b> or lower |Clβ|.
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="card tutorial" aria-live="polite">
+          <div class="tutorial-head">
+            <span class="step-counter" id="step-counter">Step 1 of 7</span>
+            <div class="step-dots" id="step-dots"></div>
+          </div>
+          <h1 class="step-title" id="step-title">…</h1>
+          <p class="step-caption" id="step-caption">…</p>
+          <div class="tutorial-nav">
+            <button type="button" class="btn btn-icon" id="btn-play" aria-label="Pause animation" title="Pause animation"></button>
+            <button type="button" class="btn" id="btn-back"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Back</span></button>
+            <button type="button" class="btn btn-primary" id="btn-next"><span>Next</span><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="btn btn-ghost" id="btn-reset" title="Go back to step 1 and default settings">Reset</button>
+          </div>
+        </section>
+
+        <section class="card controls" aria-label="Controls">
+          <h2 class="card-title">Controls</h2>
+          <div class="disturb-row">
+            <button type="button" class="btn btn-primary" id="btn-start">Start Dutch roll</button>
+            <div class="segmented" role="radiogroup" aria-label="Disturbance">
+              <button type="button" role="radio" data-input="gust" aria-checked="true">Gust</button>
+              <button type="button" role="radio" data-input="doublet" aria-checked="false">Rudder doublet</button>
+            </div>
+          </div>
+          <div class="switch-row">
+            <span>Yaw damper</span>
+            <button type="button" class="switch" role="switch" id="sw-yd" aria-checked="false"><span>OFF</span></button>
+          </div>
+          <label class="slider">
+            <span class="slider-label">Dihedral effect |Clβ| <output id="out-cl">0.12</output></span>
+            <input type="range" id="in-cl" />
+          </label>
+          <label class="slider">
+            <span class="slider-label">Directional stability Cnβ <output id="out-cn">0.11</output></span>
+            <input type="range" id="in-cn" />
+          </label>
+          <div class="stability" id="stability" data-likely="true">
+            <span id="stab-ratio">|Clβ| / Cnβ = 1.09</span>
+            <b id="stab-text">Lateral stability &gt; directional stability → Dutch roll likely</b>
+          </div>
+          <label class="slider">
+            <span class="slider-label">Yaw damper gain K <output id="out-k">1.2</output> s</span>
+            <input type="range" id="in-k" />
+          </label>
+          <label class="slider">
+            <span class="slider-label">True airspeed <output id="out-v">230</output> m/s</span>
+            <input type="range" id="in-v" />
+          </label>
+        </section>
+
+        <section class="card graph-card" aria-label="Damping graph">
+          <div class="graph-head">
+            <h2 class="card-title">Damping graph</h2>
+            <div class="switch-row compact">
+              <span>Overlay OFF / ON</span>
+              <button type="button" class="switch" role="switch" id="sw-overlay" aria-checked="false"><span>OFF</span></button>
+            </div>
+          </div>
+          <canvas class="graph" id="graph" aria-label="Graph of yaw rate, roll angle and rudder against time"></canvas>
+          <div class="graph-legend" id="legend-live">
+            <span><i style="background:#1c5fc7"></i>Yaw rate r (°/s)</span>
+            <span><i style="background:#d9822b"></i>Roll angle φ (°)</span>
+            <span><i style="background:#1f8a4c"></i>Rudder δr (°)</span>
+            <span><i class="dash"></i>Decay envelope</span>
+          </div>
+          <div class="graph-legend" id="legend-overlay" hidden>
+            <span><i style="background:#d13826"></i>Yaw rate, yaw damper OFF</span>
+            <span><i style="background:#1f8a4c"></i>Yaw rate, yaw damper ON</span>
+            <span><i class="dash"></i>Envelopes</span>
+          </div>
+          <table class="mode-table">
+            <thead><tr><th></th><th>ζ</th><th>Period</th><th>Time to ½</th></tr></thead>
+            <tbody id="mode-rows"></tbody>
+          </table>
+        </section>
+
+        <details class="card about">
+          <summary>About the model</summary>
+          <p>Linear lateral-directional equations (β, p, r, φ) integrated with a fixed-step RK4 method at 120 Hz. Yaw damper: rudder = −K × washed-out yaw rate (washout τ = 2 s), with actuator lag and rate and position limits.</p>
+          <p>A320 geometry is from Airbus documents. The stability derivatives and inertias are typical values for this class of aircraft, approximate and for teaching. All values and sources are in <code>src/config/dutchRoll.ts</code>.</p>
+        </details>
+      </aside>
+    </main>
+
+    <script type="module" src="../../src/lessons/dutch-roll/main.ts"></script>
+  </body>
+</html>

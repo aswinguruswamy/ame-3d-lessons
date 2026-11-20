@@ -480,6 +480,11 @@ input[type='range']::-moz-range-thumb {
   .lesson-name {
     font-size: 0.95rem;
   }
+  .lesson-name span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .back-link {
     font-size: 0;
   }

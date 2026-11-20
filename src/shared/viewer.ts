@@ -19,7 +19,8 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 export interface ViewerOptions {
   container: HTMLElement;
-  background: number;
+  /** Background colour; leave out when the lesson draws its own sky. */
+  background?: number;
   cameraPosition: Vector3;
   target: Vector3;
   fov?: number;
@@ -39,6 +40,7 @@ export class Viewer {
   private readonly clock = new Clock();
   private readonly home: { position: Vector3; target: Vector3 };
   private update: ((dt: number) => void) | null = null;
+  private renderOverride: (() => void) | null = null;
 
   constructor(private readonly opts: ViewerOptions) {
     const { container } = opts;
@@ -55,7 +57,7 @@ export class Viewer {
     this.labelRenderer.domElement.className = 'viewer-labels';
     container.appendChild(this.labelRenderer.domElement);
 
-    this.scene.background = new Color(opts.background);
+    if (opts.background !== undefined) this.scene.background = new Color(opts.background);
     this.scene.add(new HemisphereLight(0xffffff, 0xb8b4a8, 1.6));
     const sun = new DirectionalLight(0xffffff, 1.6);
     sun.position.set(5, 9, 8);
@@ -87,6 +89,12 @@ export class Viewer {
     this.labelRenderer.setSize(w, h);
   }
 
+  /** Changes the start position used by resetView(). */
+  setHome(position: Vector3, target: Vector3) {
+    this.home.position.copy(position);
+    this.home.target.copy(target);
+  }
+
   /** Puts the camera back to the start position. */
   resetView() {
     const { position, target } = this.home;
@@ -97,6 +105,16 @@ export class Viewer {
     this.camera.position.copy(target).add(dir);
     this.controls.target.copy(target);
     this.controls.update();
+  }
+
+  /** Replaces the default render pass (e.g. for split views). Pass null to restore it. */
+  setRenderOverride(fn: (() => void) | null) {
+    this.renderOverride = fn;
+  }
+
+  /** Size of the stage in CSS pixels. */
+  size() {
+    return { w: this.opts.container.clientWidth, h: this.opts.container.clientHeight };
   }
 
   /** Starts the frame loop. `update` gets real seconds since the last frame. */
@@ -132,8 +150,11 @@ export class Viewer {
     const dt = Math.min(this.clock.getDelta(), 1 / 20);
     this.update?.(dt);
     this.controls.update();
-    this.renderer.render(this.scene, this.camera);
-    this.labelRenderer.render(this.scene, this.camera);
+    if (this.renderOverride) this.renderOverride();
+    else {
+      this.renderer.render(this.scene, this.camera);
+      this.labelRenderer.render(this.scene, this.camera);
+    }
     this.keepLabelsOnScreen();
     this.frameMs += (performance.now() - t0 - this.frameMs) * 0.05;
     (window as unknown as { __frameMs: number }).__frameMs = this.frameMs;
