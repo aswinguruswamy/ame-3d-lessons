@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Magnus Effect · AME 3D Lessons</title>
+    <meta name="description" content="Interactive 3D lesson: how a spinning cylinder makes lift (Magnus effect), with pressure map and Kutta–Joukowski lift." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body class="lesson">
+    <header class="topbar">
+      <a class="back-link" href="../../">← All lessons</a>
+      <div class="lesson-name"><span class="eyebrow">Lesson 1</span><span>Magnus effect</span></div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost" id="btn-labels" aria-pressed="true">Labels ON</button>
+        <button type="button" class="btn btn-ghost" id="btn-view">Reset view</button>
+      </div>
+    </header>
+
+    <main class="lesson-layout">
+      <section class="stage" id="stage" aria-label="3D scene. Drag to rotate, scroll or pinch to zoom, right-drag or two-finger drag to pan.">
+        <div class="stage-loading" id="loading"><span class="spinner"></span>Loading 3D scene…</div>
+        <div class="stage-chips">
+          <span class="chip">Slow motion ×100</span>
+          <span class="chip chip-hint">Drag to rotate · Scroll to zoom</span>
+        </div>
+        <div class="legend" id="legend" hidden>
+          <div class="legend-title">Pressure coefficient Cp</div>
+          <div class="legend-bar"></div>
+          <div class="legend-scale"><span style="left:0">≤ −6</span><span style="left:75%">0</span><span style="left:100%">+1</span></div>
+          <div class="legend-words"><span>Low (fast air)</span><span>High (slow air)</span></div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="card tutorial" aria-live="polite">
+          <div class="tutorial-head">
+            <span class="step-counter" id="step-counter">Step 1 of 6</span>
+            <div class="step-dots" id="step-dots"></div>
+          </div>
+          <h1 class="step-title" id="step-title">…</h1>
+          <p class="step-caption" id="step-caption">…</p>
+          <div class="tutorial-nav">
+            <button type="button" class="btn" id="btn-back">Back</button>
+            <button type="button" class="btn" id="btn-play">Pause</button>
+            <button type="button" class="btn btn-primary" id="btn-next">Next</button>
+            <button type="button" class="btn btn-ghost" id="btn-reset" title="Go back to step 1 and default settings">Reset</button>
+          </div>
+        </section>
+
+        <section class="card readout" aria-label="Live values">
+          <h2 class="card-title">Live values</h2>
+          <div class="formula">L′ = ρ · V · Γ</div>
+          <div class="formula-sub" id="ro-formula">= 1.225 × 10.0 × 0.00</div>
+          <div class="lift-value"><span id="ro-lift">0.0</span> <span class="unit">N/m</span> <span class="lift-dir" id="ro-dir">no lift</span></div>
+          <dl class="readout-grid">
+            <dt>Spin ratio α = ωr / V</dt><dd id="ro-alpha">0.00</dd>
+            <dt>Circulation Γ</dt><dd id="ro-gamma">0.00 m²/s</dd>
+            <dt>Pressure difference ΔP</dt><dd id="ro-dp">0 Pa</dd>
+            <dt>Dynamic pressure q</dt><dd id="ro-q">0 Pa</dd>
+          </dl>
+          <p class="note" id="ro-note" hidden>Spin ratio above 2: ideal theory limits the lift (Prandtl’s limit).</p>
+        </section>
+
+        <section class="card controls" aria-label="Controls">
+          <h2 class="card-title">Controls</h2>
+          <label class="slider">
+            <span class="slider-label">Spin rate <output id="out-rpm">2000</output> RPM</span>
+            <input type="range" id="in-rpm" />
+          </label>
+          <label class="slider">
+            <span class="slider-label">Airspeed <output id="out-speed">10.0</output> m/s</span>
+            <input type="range" id="in-speed" />
+          </label>
+          <div class="switch-row">
+            <span>Spin</span>
+            <button type="button" class="switch" role="switch" id="sw-spin" aria-checked="false"><span>OFF</span></button>
+          </div>
+          <div class="switch-row">
+            <span>Direction</span>
+            <div class="segmented" role="radiogroup" aria-label="Rotation direction">
+              <button type="button" role="radio" data-dir="cw" aria-checked="true">↻ Clockwise</button>
+              <button type="button" role="radio" data-dir="ccw" aria-checked="false">↺ Counter-clockwise</button>
+            </div>
+          </div>
+          <div class="switch-row">
+            <span>Pressure map</span>
+            <button type="button" class="switch" role="switch" id="sw-map" aria-checked="false"><span>OFF</span></button>
+          </div>
+          <div class="switch-row">
+            <span>Pressure arrows</span>
+            <button type="button" class="switch" role="switch" id="sw-arrows" aria-checked="false"><span>OFF</span></button>
+          </div>
+        </section>
+
+        <details class="card about">
+          <summary>About the model</summary>
+          <p>The flow is ideal 2-D potential flow (uniform flow + doublet + vortex). Circulation uses Γ = 2π r² ω, limited to 4π r V. Real cylinders make less lift because of viscosity, so treat the numbers as an upper limit. The wake shape is a simple visual model.</p>
+          <p>Cylinder radius 5 cm, air density 1.225 kg/m³ (ISA sea level). All values and sources are in <code>src/config/magnus.ts</code>.</p>
+        </details>
+      </aside>
+    </main>
+
+    <script type="module" src="../../src/lessons/magnus/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AME 3D Lessons</title>
+    <meta name="description" content="Interactive 3D lessons in aerodynamics and flight stability for Aircraft Maintenance Engineering students." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/landing.css" />
+  </head>
+  <body>
+    <main class="landing">
+      <header class="hero">
+        <p class="eyebrow">Aircraft Maintenance Engineering · Interactive lessons</p>
+        <h1>See the physics of flight in 3D.</h1>
+        <p class="lede">
+          Short, step-by-step lessons for AME students. Turn the 3D model, change the inputs, and watch the
+          forces change in real time. Every number comes from a stated formula and source.
+        </p>
+      </header>
+
+      <section class="cards" aria-label="Lessons">
+        <a class="lesson-card" href="lessons/magnus/">
+          <div class="card-figure" aria-hidden="true">
+            <svg viewBox="0 0 320 150" role="img">
+              <defs>
+                <linearGradient id="cyl" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#1c5fc7" />
+                  <stop offset="0.5" stop-color="#bdbfc4" />
+                  <stop offset="1" stop-color="#d13826" />
+                </linearGradient>
+              </defs>
+              <g fill="none" stroke="#7b8490" stroke-width="1.4" stroke-linecap="round">
+                <path d="M10 30 C 110 30, 120 18, 160 18 S 230 40, 310 58" />
+                <path d="M10 55 C 110 55, 120 42, 160 42 S 230 64, 310 84" />
+                <path d="M10 98 C 110 98, 120 112, 160 112 S 230 112, 310 120" />
+                <path d="M10 122 C 110 122, 120 134, 160 134 S 230 132, 310 138" />
+              </g>
+              <circle cx="160" cy="77" r="30" fill="url(#cyl)" stroke="#1d2733" stroke-width="1.5" />
+              <path d="M138 56 A 30 30 0 0 1 182 56" fill="none" stroke="#d9822b" stroke-width="3" />
+              <path d="M182 56 l -9 -2 l 4 9 z" fill="#d9822b" />
+              <line x1="160" y1="77" x2="160" y2="14" stroke="#1f8a4c" stroke-width="4" />
+              <path d="M152 18 L160 4 L168 18 z" fill="#1f8a4c" />
+            </svg>
+          </div>
+          <div class="card-body">
+            <p class="eyebrow">Lesson 1 · Aerodynamics</p>
+            <h2>Magnus effect</h2>
+            <p>How a spinning cylinder makes lift. See the boundary layer, the pressure difference, and the deflected wake, and read the lift from L′ = ρ · V · Γ.</p>
+            <span class="card-cta">Open lesson →</span>
+          </div>
+        </a>
+
+        <div class="lesson-card is-soon" aria-disabled="true">
+          <div class="card-figure" aria-hidden="true">
+            <svg viewBox="0 0 320 150">
+              <g fill="none" stroke="#7b8490" stroke-width="1.4">
+                <path d="M20 110 Q 60 40 100 110 T 180 110 T 260 110 T 300 100" stroke-dasharray="4 4" />
+              </g>
+              <g transform="translate(160 70) rotate(-8)" fill="#d8d3c7" stroke="#1d2733" stroke-width="1.5">
+                <path d="M-70 0 L70 0 L76 4 L70 8 L-70 8 Z" />
+                <path d="M-10 4 L-40 -24 L-30 -24 L10 4 Z" />
+                <path d="M-10 6 L-40 34 L-30 34 L10 6 Z" />
+                <path d="M-62 4 L-74 -18 L-66 -18 L-52 4 Z" />
+              </g>
+            </svg>
+          </div>
+          <div class="card-body">
+            <p class="eyebrow">Lesson 2 · Flight stability</p>
+            <h2>Dutch roll and the yaw damper</h2>
+            <p>Why swept-wing airliners rock and yaw out of phase, and how the yaw damper stops it. A320-class model with cockpit view and damping graph.</p>
+            <span class="card-cta">Coming soon</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="landing-foot">
+        <p>
+          Built with Three.js, TypeScript and Vite. Physics values and sources are listed in the
+          <a href="https://github.com/aswinguruswamy/ame-3d-lessons">GitHub repository</a>.
+        </p>
+        <p class="small">For education only. Not for operational or maintenance use. Always follow the approved aircraft manuals.</p>
+      </footer>
+    </main>
+  </body>
+</html>
