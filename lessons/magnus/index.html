@@ -44,25 +44,11 @@
           <h1 class="step-title" id="step-title">…</h1>
           <p class="step-caption" id="step-caption">…</p>
           <div class="tutorial-nav">
-            <button type="button" class="btn" id="btn-back">Back</button>
-            <button type="button" class="btn" id="btn-play">Pause</button>
-            <button type="button" class="btn btn-primary" id="btn-next">Next</button>
+            <button type="button" class="btn btn-icon" id="btn-play" aria-label="Pause animation" title="Pause animation"></button>
+            <button type="button" class="btn" id="btn-back">← Back</button>
+            <button type="button" class="btn btn-primary" id="btn-next">Next →</button>
             <button type="button" class="btn btn-ghost" id="btn-reset" title="Go back to step 1 and default settings">Reset</button>
           </div>
-        </section>
-
-        <section class="card readout" aria-label="Live values">
-          <h2 class="card-title">Live values</h2>
-          <div class="formula">L′ = ρ · V · Γ</div>
-          <div class="formula-sub" id="ro-formula">= 1.225 × 10.0 × 0.00</div>
-          <div class="lift-value"><span id="ro-lift">0.0</span> <span class="unit">N/m</span> <span class="lift-dir" id="ro-dir">no lift</span></div>
-          <dl class="readout-grid">
-            <dt>Spin ratio α = ωr / V</dt><dd id="ro-alpha">0.00</dd>
-            <dt>Circulation Γ</dt><dd id="ro-gamma">0.00 m²/s</dd>
-            <dt>Pressure difference ΔP</dt><dd id="ro-dp">0 Pa</dd>
-            <dt>Dynamic pressure q</dt><dd id="ro-q">0 Pa</dd>
-          </dl>
-          <p class="note" id="ro-note" hidden>Spin ratio above 2: ideal theory limits the lift (Prandtl’s limit).</p>
         </section>
 
         <section class="card controls" aria-label="Controls">
@@ -94,6 +80,20 @@
             <span>Pressure arrows</span>
             <button type="button" class="switch" role="switch" id="sw-arrows" aria-checked="false"><span>OFF</span></button>
           </div>
+        </section>
+
+        <section class="card readout" aria-label="Live values">
+          <h2 class="card-title">Live values</h2>
+          <div class="formula">L′ = ρ · V · Γ</div>
+          <div class="formula-sub" id="ro-formula">= 1.225 × 10.0 × 0.00</div>
+          <div class="lift-value"><span id="ro-lift">0.0</span> <span class="unit">N/m</span> <span class="lift-dir" id="ro-dir">no lift</span></div>
+          <dl class="readout-grid">
+            <dt>Spin ratio α = ωr / V</dt><dd id="ro-alpha">0.00</dd>
+            <dt>Circulation Γ</dt><dd id="ro-gamma">0.00 m²/s</dd>
+            <dt>Pressure difference ΔP</dt><dd id="ro-dp">0 Pa</dd>
+            <dt>Dynamic pressure q</dt><dd id="ro-q">0 Pa</dd>
+          </dl>
+          <p class="note" id="ro-note" hidden>Spin ratio above 2: ideal theory limits the lift (Prandtl’s limit).</p>
         </section>
 
         <details class="card about">

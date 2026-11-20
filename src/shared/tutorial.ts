@@ -16,6 +16,11 @@ export interface TutorialHooks {
   onReset(): void;
 }
 
+const ICON_PLAY =
+  '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>';
+const ICON_PAUSE =
+  '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="3.5" y="2.5" width="3" height="11" rx="0.8" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="0.8" fill="currentColor"/></svg>';
+
 function byId<T extends HTMLElement>(id: string) {
   const el = document.getElementById(id);
   if (!el) throw new Error(`Missing element #${id}`);
@@ -100,8 +105,10 @@ export class Tutorial {
     this.el.caption.innerHTML = s.caption;
     this.el.back.disabled = this.index === 0;
     this.el.next.disabled = this.index === this.steps.length - 1;
-    this.el.play.textContent = this.playing ? 'Pause' : 'Play';
-    this.el.play.setAttribute('aria-pressed', String(!this.playing));
+    this.el.play.innerHTML = this.playing ? ICON_PAUSE : ICON_PLAY;
+    const label = this.playing ? 'Pause animation' : 'Play animation';
+    this.el.play.setAttribute('aria-label', label);
+    this.el.play.title = label;
     [...this.el.dots.children].forEach((d, i) => {
       d.classList.toggle('is-current', i === this.index);
       d.classList.toggle('is-done', i < this.index);
