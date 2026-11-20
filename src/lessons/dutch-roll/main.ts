@@ -47,10 +47,31 @@ const banner = document.getElementById('banner')!;
 
 // ---------- Controls ----------
 const S = C.sliders;
-const clIn = bindSlider('in-cl', 'out-cl', S.clBeta, (v) => v.toFixed(2), (v) => setParams({ clBeta: v }));
-const cnIn = bindSlider('in-cn', 'out-cn', S.cnBeta, (v) => v.toFixed(2), (v) => setParams({ cnBeta: v }));
-const kIn = bindSlider('in-k', 'out-k', S.gain, (v) => v.toFixed(1), (v) => setParams({ gain: v }));
-const vIn = bindSlider('in-v', 'out-v', S.airspeed, (v) => v.toFixed(0), (v) => setParams({ airspeed: v }));
+// Each slider: change the physics while dragging; when released, show what changed (ζ note)
+// and start a fresh Dutch roll so the effect is visible at once.
+const slider = (id: string, out: string, range: (typeof S)[keyof typeof S], digits: number, key: keyof DRParams) =>
+  bindSlider(
+    id,
+    out,
+    range,
+    (v) => v.toFixed(digits),
+    (v) => {
+      if (!pending) pending = { before: modeInfo, params: { ...params } };
+      setParams({ [key]: v } as Partial<DRParams>);
+    },
+    () => onSliderCommit(id, key),
+  );
+let pending: { before: ModeInfo; params: DRParams } | null = null;
+
+/** Largest roll angle (deg) after a standard gust — shows how much the wings rock. */
+function wingRock(p: DRParams) {
+  const run = simulateRun(p, 20, 1 / 20, 'gust');
+  return Math.max(...run.map((s) => Math.abs(s.phi))) * (180 / Math.PI);
+}
+const clIn = slider('in-cl', 'out-cl', S.clBeta, 2, 'clBeta');
+const cnIn = slider('in-cn', 'out-cn', S.cnBeta, 2, 'cnBeta');
+const kIn = slider('in-k', 'out-k', S.gain, 1, 'gain');
+const vIn = slider('in-v', 'out-v', S.airspeed, 0, 'airspeed');
 const ydSw = bindSwitch('sw-yd', (on) => setYawDamper(on));
 const overlaySw = bindSwitch('sw-overlay', (on) => setOverlay(on));
 const inputSeg = bindSegmented('[data-input]', 'input', (k) => {
@@ -59,6 +80,54 @@ const inputSeg = bindSegmented('[data-input]', 'input', (k) => {
 });
 const viewSeg = bindSegmented('[data-view]', 'view', (vw) => setView(vw as ViewMode));
 document.getElementById('btn-start')!.addEventListener('click', () => startDutchRoll());
+const demoNote = document.getElementById('demo-note')!;
+const legendGhost = document.getElementById('legend-ghost')!;
+const noteTimers = new Map<string, number>();
+
+/** Shows "ζ before → after" under the slider for a few seconds. */
+function showDelta(inputId: string, key: keyof DRParams, before: ModeInfo, after: ModeInfo, beforeParams: DRParams) {
+  const label = document.getElementById(inputId)!.closest('label')!;
+  let note = label.nextElementSibling as HTMLElement | null;
+  if (!note || !note.classList.contains('delta-note')) {
+    note = document.createElement('div');
+    note.className = 'delta-note';
+    note.setAttribute('role', 'status');
+    label.after(note);
+  }
+  let trend: string;
+  let words: string;
+  if (key === 'gain' && !params.yawDamper) {
+    trend = 'same';
+    words = 'Yaw damper is OFF: the gain has no effect until you switch it ON.';
+  } else {
+    if (!after.stable) [trend, words] = ['unstable', 'unstable: the oscillation grows!'];
+    else if (after.zeta > before.zeta + 0.002) [trend, words] = ['better', 'damps faster'];
+    else if (after.zeta < before.zeta - 0.002) [trend, words] = ['worse', 'damps slower'];
+    else [trend, words] = ['same', 'about the same damping'];
+    const rock0 = wingRock(beforeParams);
+    const rock1 = wingRock(params);
+    words =
+      `ζ ${before.zeta.toFixed(3)} → ${after.zeta.toFixed(3)} (${words}) · ` +
+      `period ${before.period.toFixed(1)} → ${after.period.toFixed(1)} s · ` +
+      `wing rocking ${rock0.toFixed(1)}° → ${rock1.toFixed(1)}°`;
+  }
+  note.dataset.trend = trend;
+  note.textContent = words;
+  window.clearTimeout(noteTimers.get(inputId));
+  noteTimers.set(
+    inputId,
+    window.setTimeout(() => note?.remove(), 7000),
+  );
+}
+
+function onSliderCommit(inputId: string, key: keyof DRParams) {
+  const before = pending?.before ?? modeInfo;
+  const beforeParams = pending?.params ?? params;
+  pending = null;
+  showDelta(inputId, key, before, modeInfo, beforeParams);
+  const noEffect = key === 'gain' && !params.yawDamper;
+  if (mode === 'live' && !noEffect) startDutchRoll();
+}
 
 const stab = document.getElementById('stability')!;
 const stabRatio = document.getElementById('stab-ratio')!;
@@ -152,21 +221,33 @@ splitAllowed.addEventListener('change', () => {
 
 function setMode(m: SceneMode) {
   mode = m;
+  demoNote.hidden = m === 'live';
   scene?.setMode(m);
 }
 
 function resetMotion() {
   sim.reset();
   graph.clear();
+  graph.setGhost(null);
+  legendGhost.hidden = true;
   env = 0;
   lastSampleT = -1;
   banner.hidden = true;
   scene?.clearTrails();
 }
 
+/**
+ * Starts a fresh Dutch roll from straight flight. The yaw rate of the previous run stays
+ * on the graph in grey, so the effect of a change is easy to compare.
+ */
 function startDutchRoll(kind: Disturbance = disturbance) {
   if (mode !== 'live') setMode('live');
-  if (sim.outOfRange) resetMotion();
+  const previous = Number.isFinite(sim.tDisturb) ? graph.samplesSince(sim.tDisturb) : null;
+  resetMotion();
+  if (previous && previous.length > 30) {
+    graph.setGhost(previous, 0);
+    legendGhost.hidden = false;
+  }
   sim.disturb(kind);
 }
 
@@ -233,7 +314,7 @@ const STEPS: Step[] = [
     title: 'A gust starts the Dutch roll',
     caption:
       'A side gust pushes the nose sideways. The strong dihedral effect turns this yaw into roll, and the two motions keep feeding each other. Yaw and roll are out of phase: the wings rock while the nose swings left and right.',
-    focus: ['yaw', 'roll'],
+    focus: ['yaw', 'roll', 'flightPath'],
     enter: () => {
       setMode('live');
       setYawDamper(false, false);

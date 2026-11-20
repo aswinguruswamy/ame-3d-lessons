@@ -13,6 +13,7 @@ import {
   Group,
   Line,
   LineBasicMaterial,
+  LineDashedMaterial,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -33,6 +34,9 @@ import { Viewer } from '../../shared/viewer';
 import { createAircraft } from './aircraft';
 
 const DEG = Math.PI / 180;
+/** Demo swing angles (steps 2–3). Exaggerated for demonstration; see the on-screen note. */
+const DEMO_YAW = 8 * DEG;
+const DEMO_ROLL = 10 * DEG;
 /** Layer 1: seen only from outside. Layer 2: seen only from the cockpit. */
 const OUTSIDE = 1;
 const COCKPIT = 2;
@@ -99,8 +103,8 @@ function cloudTexture(size: number, blobs: number, base: string | null, seed = 1
 export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks): DutchRollScene {
   const viewer = new Viewer({
     container,
-    cameraPosition: new Vector3(9, 8.5, 52), // = HOMES.live
-    target: new Vector3(0, 0.5, 1.5),
+    cameraPosition: new Vector3(-58, 15, -16), // = HOMES.live (3/4 side view, left side, slightly ahead)
+    target: new Vector3(0, 0.5, 1),
     fov: 40,
     fitAspect: 1.3,
   });
@@ -211,6 +215,7 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
 
   // ---------- Wingtip trails ----------
   const TRAIL = 220;
+  const TRAIL_SLOW = 4;
   const trailPos = [new Float32Array(TRAIL * 3), new Float32Array(TRAIL * 3)];
   const trails = trailPos.map((arr) => {
     const g = new BufferGeometry();
@@ -224,7 +229,9 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
   let trailsFilled = false;
   const tipWorld = new Vector3();
   const updateTrails = (dt: number) => {
-    const vis = 55 * dt; // visual speed of the trail, m per frame
+    // Trail points stay in the air, so they move aft at the airspeed. Drawn slowed (÷ TRAIL_SLOW)
+    // so the Dutch roll wave (wavelength ≈ V·T ≈ 1.3 km) fits in the view.
+    const vis = (airspeed / TRAIL_SLOW) * dt;
     const tips = [ac.points.rightWingTip, ac.points.leftWingTip];
     trails.forEach((line, k) => {
       const a = trailPos[k];
@@ -262,6 +269,20 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
   wind.traverse((o) => o.layers.set(OUTSIDE));
   scene.add(wind);
 
+  // Velocity vector (flight path) from the nose, and a dashed line along the nose axis.
+  // The angle between them is the sideslip β (true size, not exaggerated).
+  const PATH_LEN = 10;
+  const velArrow = new Arrow(0x7b4fc9, 0.12, 0.8);
+  const noseAxis = new Line(
+    new BufferGeometry().setFromPoints([ac.points.nose.clone(), ac.points.nose.clone().add(new Vector3(0, 0, -PATH_LEN))]),
+    new LineDashedMaterial({ color: 0x1d2733, dashSize: 0.6, gapSize: 0.4 }),
+  );
+  noseAxis.computeLineDistances();
+  for (const o of [velArrow.group, noseAxis]) {
+    o.traverse((c) => c.layers.set(OUTSIDE));
+    ac.group.add(o);
+  }
+
   const finForce = new Arrow(0xd9822b, 0.2, 1.1);
   const liftR = new Arrow(0x1f8a4c, 0.2, 1.1);
   const liftL = new Arrow(0x1f8a4c, 0.2, 1.1);
@@ -274,24 +295,29 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
   const P = ac.points;
   const v = (x: number, y: number, z: number) => new Vector3(x, y, z);
   const placards = new PlacardSet();
-  placards.add(new Placard('fin', 'Vertical stabiliser (fin)', P.finMid, v(-7, 4, 0)));
-  placards.add(new Placard('rudder', 'Rudder (turns about its hinge line)', P.rudderMid, v(6, 4.5, 0)));
-  placards.add(new Placard('wing', 'Swept wing (25°)', P.rightWingMid, v(5, 4, 0)));
-  placards.add(new Placard('dihedral', 'Dihedral angle (≈5°)', P.dihedralLeft, v(-5, 4.5, 0)));
-  placards.add(new Placard('aileron', 'Aileron', P.rightAileron, v(4, -3.5, 0)));
-  placards.add(new Placard('engine', 'Engine', P.leftEngine, v(-5, -4, 0)));
+  // Offsets use y (up) and z (aft) so they read well in the side view.
+  const left = (p: Vector3) => p.clone().multiply(v(-1, 1, 1));
+  placards.add(new Placard('fin', 'Vertical stabiliser (fin)', P.finMid, v(0, 5.5, -4)));
+  placards.add(new Placard('rudder', 'Rudder (turns about its hinge line)', P.rudderMid, v(0, 4, 6)));
+  placards.add(new Placard('wing', 'Swept wing (25°)', P.leftWingMid, v(0, -5, -5)));
+  placards.add(new Placard('dihedral', 'Dihedral angle (≈5°)', P.dihedralLeft, v(0, 5, -6)));
+  placards.add(new Placard('aileron', 'Aileron', left(P.rightAileron), v(0, -4, 6)));
+  placards.add(new Placard('engine', 'Engine', P.leftEngine, v(0, -4.5, -6)));
   const pWind = placards.add(new Placard('wind', 'Relative wind', v(0, 2, -30), v(-6, 4, 0)));
   const pFinForce = placards.add(new Placard('finForce', 'Side force on the fin', P.finMid, v(6, 5, 0)));
   const pLift = placards.add(new Placard('wingLift', 'More lift on the low (upwind) wing', P.rightWingMid.clone().add(v(0, 4, 0)), v(4, 3, 0)));
-  placards.add(new Placard('yaw', 'Yaw: the nose swings left and right', P.nose, v(-6, 4, 0)));
-  placards.add(new Placard('roll', 'Roll: the wings rock up and down', P.rightWingTip, v(3, 4, 0)));
+  placards.add(new Placard('yaw', 'Yaw: the nose swings left and right', P.nose, v(0, 4.5, -3)));
+  placards.add(new Placard('roll', 'Roll: the wings rock up and down', P.leftWingTip, v(0, 4.5, 5)));
+  const pPath = placards.add(
+    new Placard('flightPath', 'Flight path (velocity). Its angle to the nose is the sideslip β', P.nose.clone().add(v(0, 0, -9)), v(0, -4, -2)),
+  );
   placards.group.traverse((o) => o.layers.set(OUTSIDE));
   ac.group.add(placards.group);
 
   // Camera start positions per mode: chase view, top view (yaw), rear view (roll)
   const HOMES: Record<SceneMode, [Vector3, Vector3]> = {
-    live: [new Vector3(9, 8.5, 52), new Vector3(0, 0.5, 1.5)],
-    weathervane: [new Vector3(4, 80, 30), new Vector3(0, 0, -8)],
+    live: [new Vector3(-58, 15, -16), new Vector3(0, 0.5, 1)],
+    weathervane: [new Vector3(3, 88, 22), new Vector3(0, 0, -2)],
     dihedral: [new Vector3(0, 5, 56), new Vector3(0, 1.5, 0)],
   };
 
@@ -315,6 +341,8 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
     finForce.group.visible = mode === 'weathervane';
     liftR.group.visible = liftL.group.visible = mode === 'dihedral';
     trails.forEach((t) => (t.visible = mode === 'live'));
+    velArrow.group.visible = noseAxis.visible = mode === 'live';
+    pPath.setContextVisible(mode === 'live' && focus.includes('flightPath'));
     ac.dihedralGuide.visible = focus.includes('dihedral');
     ac.hingeLine.visible = focus.includes('rudder');
     placards.refresh();
@@ -331,11 +359,11 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
   const demoPose = (t: number): Pose => {
     if (mode === 'weathervane') {
       const c = t % 7;
-      const psi = c < 0.7 ? 12 * DEG * (c / 0.7) : 12 * DEG * Math.exp(-0.55 * (c - 0.7)) * Math.cos(1.25 * (c - 0.7));
+      const psi = c < 0.7 ? DEMO_YAW * (c / 0.7) : DEMO_YAW * Math.exp(-0.55 * (c - 0.7)) * Math.cos(1.25 * (c - 0.7));
       return { phi: 0, psi, beta: -psi, dr: 0 };
     }
     const c = t % 8;
-    const phi = c < 0.9 ? 15 * DEG * (c / 0.9) : 15 * DEG * Math.exp(-0.75 * (c - 0.9));
+    const phi = c < 0.9 ? DEMO_ROLL * (c / 0.9) : DEMO_ROLL * Math.exp(-0.75 * (c - 0.9));
     return { phi, psi: 0, beta: 0.5 * phi, dr: 0 };
   };
 
@@ -394,24 +422,29 @@ export function createDutchRollScene(container: HTMLElement, hooks: DRSceneHooks
     ac.setRudder(pose.dr * DUTCH_ROLL.rudderVisualScale);
 
     // clouds move past at the true airspeed
-    deckTex.offset.y -= (airspeed * dt) / TILE;
+    // the cloud deck streams AFT (toward +z) past the aircraft
+    deckTex.offset.y += (airspeed * dt) / TILE;
 
-    if (mode === 'live') updateTrails(dt);
+    if (mode === 'live') {
+      updateTrails(dt);
+      // body-axis velocity direction: forward, turned right by β
+      velArrow.set(P.nose, new Vector3(Math.sin(pose.beta), 0, -Math.cos(pose.beta)), PATH_LEN);
+    }
     else {
       // wind arrows stream toward the aircraft; turned by the sideslip angle
       wind.rotation.y = mode === 'dihedral' ? -pose.beta : 0;
       const cyc = (demoT * 0.8) % 1;
       windArrows.forEach((a) =>
         mode === 'weathervane'
-          ? a.set(new Vector3(a.group.userData.x as number, 1.5, -42 + cyc * 8), new Vector3(0, 0, 1), 7)
+          ? a.set(new Vector3(a.group.userData.x as number, 1.5, -33 + cyc * 7), new Vector3(0, 0, 1), 7)
           : a.set(new Vector3(18 + (a.group.userData.x as number) * 0.6, 3 + (a.group.userData.x as number) * 0.5, -8 + cyc * 6), new Vector3(0, 0, 1), 6),
       );
       if (mode === 'weathervane') {
-        const len = (Math.abs(pose.psi) / (12 * DEG)) * 5;
+        const len = (Math.abs(pose.psi) / DEMO_YAW) * 5;
         finForce.set(P.finMid.clone().add(new Vector3(0.4 * Math.sign(pose.psi), 0, 0)), new Vector3(Math.sign(pose.psi) || 1, 0, 0), len);
         pFinForce.setAnchor(P.finMid.clone().add(new Vector3(Math.sign(pose.psi) * (len + 0.4), 0, 0)), v(6, 5, 0));
       } else {
-        const k = pose.beta / (7.5 * DEG);
+        const k = pose.beta / (0.5 * DEMO_ROLL);
         liftR.set(P.rightWingMid, new Vector3(0, 1, 0), 3 + 2.5 * k);
         liftL.set(P.leftWingMid, new Vector3(0, 1, 0), Math.max(0.5, 3 - 2.0 * k));
         pLift.setAnchor(P.rightWingMid.clone().add(v(0, 3 + 2.5 * k, 0)), v(4, 3, 0));

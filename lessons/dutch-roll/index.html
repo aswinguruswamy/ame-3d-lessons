@@ -36,6 +36,9 @@
           <div id="overhead"></div>
           <div id="ecam"></div>
         </div>
+        <div class="stage-note" id="demo-note" hidden>
+          <b>Motion exaggerated for demonstration.</b> Real sideslip and yaw angles here are only a few degrees.
+        </div>
         <div class="stage-banner" id="banner" hidden>
           The motion is too large for this simple (linear) model. Press <b>Reset</b> or lower |Clβ|.
         </div>
@@ -106,6 +109,7 @@
             <span><i style="background:#d9822b"></i>Roll angle φ (°)</span>
             <span><i style="background:#1f8a4c"></i>Rudder δr (°)</span>
             <span><i class="dash"></i>Decay envelope</span>
+            <span id="legend-ghost" hidden><i class="dash ghost"></i>Yaw rate, previous settings</span>
           </div>
           <div class="graph-legend" id="legend-overlay" hidden>
             <span><i style="background:#d13826"></i>Yaw rate, yaw damper OFF</span>
@@ -120,7 +124,7 @@
 
         <details class="card about">
           <summary>About the model</summary>
-          <p>Linear lateral-directional equations (β, p, r, φ) integrated with a fixed-step RK4 method at 120 Hz. Yaw damper: rudder = −K × washed-out yaw rate (washout τ = 2 s), with actuator lag and rate and position limits.</p>
+          <p>Linear lateral-directional equations (β, p, r, φ) integrated with a fixed-step RK4 method at 120 Hz. Yaw damper: rudder = −K × washed-out yaw rate (washout τ = 4 s), with actuator lag and rate and position limits. The purple arrow at the nose is the flight path; its angle to the nose is the sideslip β (true size).</p>
           <p>A320 geometry is from Airbus documents. The stability derivatives and inertias are typical values for this class of aircraft, approximate and for teaching. All values and sources are in <code>src/config/dutchRoll.ts</code>.</p>
         </details>
       </aside>

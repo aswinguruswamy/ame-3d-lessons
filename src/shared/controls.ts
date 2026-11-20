@@ -13,6 +13,8 @@ export function bindSlider(
   range: Range,
   format: (v: number) => string,
   onInput: (v: number) => void,
+  /** Called once when the user lets go of the slider (or finishes a keyboard change). */
+  onCommit?: (v: number) => void,
 ) {
   const input = document.getElementById(inputId) as HTMLInputElement;
   const output = document.getElementById(outputId) as HTMLOutputElement;
@@ -28,6 +30,7 @@ export function bindSlider(
     paint();
     onInput(Number(input.value));
   });
+  if (onCommit) input.addEventListener('change', () => onCommit(Number(input.value)));
   return {
     set(v: number) {
       input.value = String(v);

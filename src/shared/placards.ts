@@ -65,7 +65,9 @@ export class Placard {
     this.dot.position.copy(anchor);
     this.label.position.copy(tip);
     // Attach the label by the edge that faces the anchor.
-    this.label.center.set(offset.x >= 0 ? 0 : 1, offset.y > 0.3 ? 1 : offset.y < -0.3 ? 0 : 0.5);
+    // (uses x, or z when the offset is mainly along z — e.g. side views)
+    const h = Math.abs(offset.x) >= Math.abs(offset.z) ? offset.x : offset.z;
+    this.label.center.set(h >= 0 ? 0 : 1, offset.y > 0.3 ? 1 : offset.y < -0.3 ? 0 : 0.5);
   }
 
   setText(text: string) {

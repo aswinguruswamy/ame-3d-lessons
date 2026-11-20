@@ -22,7 +22,7 @@ export interface OverlayRun {
   sigma: number;
 }
 
-const COLORS = { r: '#1c5fc7', phi: '#d9822b', dr: '#1f8a4c', env: '#7b8490', grid: '#e4e0d6', axis: '#9aa1aa', text: '#4a5563' };
+const COLORS = { ghost: '#a7adb5', r: '#1c5fc7', phi: '#d9822b', dr: '#1f8a4c', env: '#7b8490', grid: '#e4e0d6', axis: '#9aa1aa', text: '#4a5563' };
 
 function niceMax(v: number) {
   const steps = [0.5, 1, 2, 3, 5, 10, 15, 20, 30, 45, 60];
@@ -34,6 +34,8 @@ export class DampingGraph {
   private readonly ctx: CanvasRenderingContext2D;
   private samples: Sample[] = [];
   private overlay: OverlayRun[] | null = null;
+  /** Previous run (time from its disturbance) drawn in grey, starting at t0 on the live axis. */
+  private ghost: { points: { t: number; r: number }[]; t0: number } | null = null;
   readonly window = 30;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -53,6 +55,19 @@ export class DampingGraph {
 
   clear() {
     this.samples = [];
+  }
+
+  /** Yaw-rate samples since time t0, with time measured from t0. */
+  samplesSince(t0: number) {
+    return this.samples.filter((s) => s.t >= t0).map((s) => ({ t: s.t - t0, r: s.r }));
+  }
+
+  setGhost(points: { t: number; r: number }[] | null, t0 = 0) {
+    this.ghost = points && points.length > 1 ? { points, t0 } : null;
+  }
+
+  hasGhost() {
+    return this.ghost !== null;
   }
 
   /** Largest |r| (rad/s) in the last `seconds`. */
@@ -100,6 +115,7 @@ export class DampingGraph {
       const last = this.samples[this.samples.length - 1];
       t1 = Math.max(this.window, last ? last.t : 0);
       t0 = t1 - this.window;
+      if (this.ghost) for (const p of this.ghost.points) ymax = Math.max(ymax, Math.abs(p.r) * RAD);
       for (const s of this.samples) {
         if (s.t < t0) continue;
         ymax = Math.max(ymax, Math.abs(s.r) * RAD, Math.abs(s.phi) * RAD, Math.abs(s.dr) * RAD, s.env * RAD);
@@ -171,6 +187,10 @@ export class DampingGraph {
         line(envN, run.color, 1.2, [5, 4]);
       }
     } else {
+      if (this.ghost) {
+        const g = this.ghost;
+        line(g.points.map((p) => ({ x: X(p.t + g.t0), y: Y(p.r * RAD) })), COLORS.ghost, 2, [2, 3]);
+      }
       const vis = this.samples.filter((s) => s.t >= t0 - 0.1);
       line(vis.map((s) => ({ x: X(s.t), y: Y(s.env * RAD) })), COLORS.env, 1.2, [5, 4]);
       line(vis.map((s) => ({ x: X(s.t), y: Y(-s.env * RAD) })), COLORS.env, 1.2, [5, 4]);

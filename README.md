@@ -49,6 +49,7 @@ Checks (automated in `tests/magnus.test.ts`):
 ![Lesson 2: split view and overlay damping graph](docs/screenshots/dutch-roll-split-overlay.jpg)
 
 <p>
+  <img src="docs/screenshots/dutch-roll-side.jpg" alt="Lesson 2: 3/4 side view during a Dutch roll, with flight-path arrow" width="520" />
   <img src="docs/screenshots/dutch-roll-yaw-damper.jpg" alt="Yaw damper selected: FAC 1 pushbutton, rudder indicator and 3D rudder" width="520" />
   <img src="docs/screenshots/dutch-roll-mobile.jpg" alt="Lesson 2 on a phone" width="220" />
 </p>
@@ -61,7 +62,7 @@ What you see:
   - Low swept wing with dihedral, sharklets, two engines under the wings, conventional tail. No logo and no livery.
   - The rudder is a separate part that turns about its swept hinge line. The ailerons are separate parts too.
 - **Three views.**
-  - Outside: a chase camera with orbit control and wingtip trails.
+  - Outside: opens as a 3/4 side view (the aircraft flies right to left, clouds stream aft), with orbit control and wingtip trails.
   - Cockpit: the pilot eye point with a glareshield and a fixed nose symbol, so the horizon rolls and the nose swings across it.
   - Split: both side by side, desktop only.
 - **Theory demos.**
@@ -75,6 +76,12 @@ What you see:
   - A yaw damper ON/OFF toggle, which also works during an oscillation.
   - Sliders for |Clβ|, Cnβ, yaw damper gain and airspeed.
   - A live "Dutch roll likely" label driven by |Clβ| / Cnβ.
+- **Cause and effect.**
+  - When you release a slider, a fresh Dutch roll starts at once.
+  - The previous run stays on the graph as a grey dotted line.
+  - A note under the slider shows what changed: ζ, period and wing rocking. For example: "ζ 0.046 → 0.020 (damps slower) · wing rocking 4.0° → 9.0°".
+- **Flight path arrow.** A purple velocity vector at the nose. Its angle to the dashed nose axis is the sideslip β (true size).
+- **Honest exaggeration.** The theory demos show the note "Motion exaggerated for demonstration". The 3D rudder deflection is drawn ×4, and the wingtip trails are slowed ×4 so the Dutch roll wave fits the view.
 - **Damping graph.**
   - Yaw rate, roll angle and rudder against time, with the decay envelope.
   - The damping ratio ζ, the period and the time to half amplitude.
@@ -84,17 +91,18 @@ Physics:
 
 - Linear lateral-directional model with states β, p, r, φ (plus ψ for display).
 - Fixed-step RK4 integration at 120 Hz.
-- Yaw damper: δr = −K · (washed-out yaw rate), with a washout time constant τ = 2 s, actuator lag, a rate limit and position limits.
+- Yaw damper: δr = −K · (washed-out yaw rate), with a washout time constant τ = 4 s, actuator lag, a rate limit and position limits. With K = 0.6 s it mainly adds damping and keeps the period close to the yaw-damper-OFF period.
 - ζ and the period come from the eigenvalues of the closed-loop system matrix (Faddeev–LeVerrier + Durand–Kerner, in `src/shared/eigen.ts`).
 
 | Default case (FL350, 230 m/s TAS) | ζ | Period | Time to ½ amplitude |
 | --- | --- | --- | --- |
-| Yaw damper OFF | 0.022 | 5.5 s | 27.9 s |
-| Yaw damper ON (K = 1.2 s) | 0.345 | 8.8 s | 2.6 s |
+| Yaw damper OFF | 0.047 | 5.6 s | 13.2 s |
+| Yaw damper ON (K = 0.6 s) | 0.319 | 6.3 s | 2.1 s |
 
 Checks (automated in `tests/dutch-roll.test.ts`):
 
-- With the yaw damper OFF, the oscillation runs more than 6 cycles in 40 s and stays above 20 % of its amplitude.
+- With the yaw damper OFF, the oscillation runs more than 6 cycles in 40 s and stays above 10 % of its amplitude.
+- The yaw damper keeps the period within −10 % / +25 % of the OFF period (it damps, it does not detune).
 - With the yaw damper ON, it drops below 10 % after 3 periods.
 - The rudder moves against the yaw rate in more than 85 % of samples.
 - The RK4 time response matches the eigenvalue decay rate (log decrement).
@@ -145,9 +153,9 @@ All values are in [`src/config/dutchRoll.ts`](src/config/dutchRoll.ts). Airbus d
 | Dihedral | ≈ 5.1°, **APPROXIMATE** | Commonly quoted value |
 | Air density at FL350 | 0.3796 kg/m³ | ICAO Doc 7488/3 (ISA) |
 | Mass, Ixx, Izz | 64 t, 1.2e6, 4.0e6 kg·m², **APPROXIMATE** | Estimated with radii of gyration from J. Roskam, *Airplane Flight Dynamics and Automatic Flight Controls*, Part I |
-| Cyβ, Clβ, Cnβ, Clp, Clr, Cnp, Cnr, rudder derivatives | Typical jet-transport values, **APPROXIMATE, for teaching** | R. C. Nelson, *Flight Stability and Automatic Control*, 2nd ed.; Roskam Part I; Heffley & Jewell, NASA CR-2144 (1972) |
+| Cyβ, Clβ, Cnβ, Clp, Clr, Cnp, Cnr, rudder derivatives | Typical jet-transport values (Cnr = −0.20 gives yaw-damper-OFF ζ ≈ 0.05), **APPROXIMATE, for teaching** | R. C. Nelson, *Flight Stability and Automatic Control*, 2nd ed.; Roskam Part I; Heffley & Jewell, NASA CR-2144 (1972) |
 | Lateral equations, Dutch roll, yaw damper with washout | Model structure | Nelson, Ch. 5 and Ch. 10 |
-| Yaw damper authority, rudder travel and rate limits, washout τ | 10°, 10°, 25°/s, 2 s, **APPROXIMATE** | Typical values; see A320 FCOM DSC-27 for the aircraft |
+| Yaw damper authority, rudder travel and rate limits, washout τ, gain K | 10°, 10°, 25°/s, 4 s, 0.6 s, **APPROXIMATE** | Typical values; see A320 FCOM DSC-27 for the aircraft |
 | "Dutch roll likely" limit | \|Clβ\| / Cnβ > 1.0, **APPROXIMATE, for teaching** | Rule of thumb, not a certification criterion |
 
 **Overhead panel note:** the FAC 1 pushbutton inset follows the public description of the A320 overhead FLT CTL panel (FCOM DSC-27). There, FAC 1 sits with ELAC 1 and SEC 1, and the button has a FAULT light (amber) and an OFF light (white). I did not have access to a current FCOM, so check the layout against it before using this for type training. As a teaching simplification, FAC 1 is treated as "the yaw damper". On the aircraft, FAC 2 is a back-up.

@@ -69,7 +69,7 @@ export const DUTCH_ROLL = {
     Cl_p: -0.45,
     Cl_r: 0.15,
     Cn_p: -0.03,
-    Cn_r: -0.12,
+    Cn_r: -0.2, // gives yaw-damper-OFF ζ ≈ 0.05, typical of swept-wing jets in cruise
     Cy_dr: -0.2,
     Cl_dr: -0.015,
     Cn_dr: 0.1,
@@ -79,7 +79,7 @@ export const DUTCH_ROLL = {
   sliders: {
     clBeta: { min: 0.02, max: 0.3, step: 0.01, default: 0.12 },
     cnBeta: { min: 0.03, max: 0.25, step: 0.01, default: 0.11 },
-    gain: { min: 0, max: 3, step: 0.1, default: 1.2 },
+    gain: { min: 0, max: 3, step: 0.1, default: 0.6 },
     /** True airspeed, m/s. 230 m/s ≈ Mach 0.78 at FL350. */
     airspeed: { min: 150, max: 250, step: 5, default: 230 },
   },
@@ -91,8 +91,12 @@ export const DUTCH_ROLL = {
   dutchRollRatioLimit: 1.0,
 
   yawDamper: {
-    /** Washout time constant τ, s: removes steady yaw rate so turns are not opposed [D4]. APPROXIMATE. */
-    washoutTau: 2.0,
+    /**
+     * Washout time constant τ, s: removes steady yaw rate so turns are not opposed [D4].
+     * APPROXIMATE. With τ = 4 s and K = 0.6 s the yaw damper mainly adds damping and keeps
+     * the period close to the yaw-damper-OFF period (≈ 5.6 s → 6.3 s).
+     */
+    washoutTau: 4.0,
     /** Rudder actuator time constant, s. APPROXIMATE. */
     actuatorTau: 0.1,
     /** Max rudder rate, rad/s. APPROXIMATE (order of 25–40°/s for transport rudders). */

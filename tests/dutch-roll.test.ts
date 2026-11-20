@@ -44,9 +44,16 @@ describe('Dutch roll', () => {
     expect(m.zeta).toBeLessThan(0.08);
     const run = simulateRun(off, 40);
     const pk = peaks(run);
-    // one |r| peak per half-cycle: at least 6 full cycles in 40 s, still > 20 % amplitude
+    // one |r| peak per half-cycle: at least 6 full cycles in 40 s, still > 10 % amplitude
     expect(pk.length).toBeGreaterThanOrEqual(12);
-    expect(pk[pk.length - 1].a / pk[0].a).toBeGreaterThan(0.2);
+    expect(pk[pk.length - 1].a / pk[0].a).toBeGreaterThan(0.1);
+  });
+
+  it('keeps the period close to the yaw-damper-OFF period (damping, not detuning)', () => {
+    const tOff = dutchRollMode(off).period;
+    const tOn = dutchRollMode(on).period;
+    expect(tOn / tOff).toBeGreaterThan(0.9);
+    expect(tOn / tOff).toBeLessThan(1.25);
   });
 
   it('decays within a few cycles with the yaw damper ON', () => {
