@@ -205,6 +205,10 @@ tests/                      Vitest physics tests
 - **How it was built:** Aswin was the PM and product owner (scope, decisions and acceptance). Claude built and tested the code.
 - **Portfolio page:** [AME 3D Lessons in Aswin's portfolio](https://aswinguruswamy.github.io/aswin-guruswamy-portfolio/projects/ame-3d-lessons/).
 
+## Licence
+
+[MIT](LICENSE) © 2026 Aswin Guruswamy. The licence covers the code and text in this repository. It does not cover the Airbus, A320 or ICAO names, which belong to their owners.
+
 ## Disclaimer
 
 For education only. Not for operational or maintenance use. Always follow the approved aircraft documentation.
